@@ -9,4 +9,5 @@ def test_placeholder_script_runs() -> None:
         text=True,
         check=True,
     )
-    assert "ABA fetch skill placeholder" in result.stdout
+    assert "人工登录后抓 ABA（低风险骨架流程）" in result.stdout
+    assert "未进行真实抓取" in result.stdout

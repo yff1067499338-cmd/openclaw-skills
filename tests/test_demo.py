@@ -9,5 +9,6 @@ def test_placeholder_script_runs() -> None:
         text=True,
         check=True,
     )
-    assert "人工登录后抓 ABA（低风险骨架流程）" in result.stdout
-    assert "未进行真实抓取" in result.stdout
+    assert "第一版可运行演示优化" in result.stdout
+    assert "第 5 步 / 共 5 步：模拟写入飞书" in result.stdout
+    assert "未进行真实抓取、真实解析、真实飞书写入" in result.stdout

@@ -1,0 +1,12 @@
+{
+  "region": "US",
+  "marketplace": "amazon.com",
+  "output": {
+    "format": "json",
+    "path": "./output/aba_fetch_result.json"
+  },
+  "schedule": {
+    "enabled": false,
+    "cron": "0 9 * * *"
+  }
+}

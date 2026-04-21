@@ -75,6 +75,23 @@ python -m skills.aba_fetch.main
 pytest
 ```
 
+## Windows / PowerShell 运行注意事项
+
+为了在 Windows PowerShell 下获得更稳定的输出与测试结果，当前演示脚本已避免使用容易触发编码问题的 emoji 等特殊字符。默认情况下可直接运行：
+
+```powershell
+python -m skills.aba_fetch.main
+pytest -q
+```
+
+如果你的终端环境仍出现中文乱码或编码异常，可临时启用 UTF-8 模式后再运行：
+
+```powershell
+$env:PYTHONUTF8="1"
+python -m skills.aba_fetch.main
+pytest -q
+```
+
 ## 说明
 
 - `skills/aba_fetch/main.py` 当前是“第一版可运行演示优化”。

@@ -11,6 +11,7 @@ from dataclasses import dataclass
 import platform
 import subprocess
 from typing import Any
+from urllib.parse import urlparse
 
 import requests
 
@@ -40,6 +41,16 @@ class BrowserPageInfo:
     debugger_address: str
     title: str
     url: str
+
+
+@dataclass
+class PageRecognition:
+    """页面识别结果。"""
+
+    is_amazon_page: bool
+    is_aba_page: bool
+    amazon_reasons: list[str]
+    aba_reasons: list[str]
 
 
 def _log_step(step_no: int, step_total: int, title: str) -> None:
@@ -189,31 +200,91 @@ def read_current_page_info(ctx: RuntimeContext) -> tuple[CheckResult, BrowserPag
     )
 
 
-def export_aba_data() -> str:
-    """第 3 步：模拟导出 ABA 数据。"""
-    _log_step(3, 4, "执行导出动作（占位）")
-    print("真实流程中：用户在 ABA 页面手动点击导出。")
-    print("当前版本：仅返回一个示例导出路径，不做真实导出。")
-    mock_file_path = "./mock_exports/aba_export_demo.csv"
-    print(f"[PASS] EXPORT_PLACEHOLDER - 导出动作占位完成：{mock_file_path}")
-    return mock_file_path
+def _parse_domain(url: str) -> str:
+    """尽量从 URL 中解析出 domain。"""
+    try:
+        parsed = urlparse(url)
+        return (parsed.netloc or "").lower()
+    except Exception:  # noqa: BLE001
+        return ""
 
 
-def parse_export_file(file_path: str) -> list[dict]:
-    """第 4 步：模拟解析导出文件。"""
-    _log_step(4, 4, "解析导出文件（占位）")
-    print(f"目标文件：{file_path}")
-    print("当前版本：不读取真实文件，只返回示例数据。")
+def recognize_page(page_info: BrowserPageInfo) -> PageRecognition:
+    """基于 title / url 识别 Amazon 页面与疑似 ABA 页面。"""
+    _log_step(3, 3, "页面识别（基于 title / URL）")
+
+    title_l = page_info.title.lower()
+    url_l = page_info.url.lower()
+    domain = _parse_domain(page_info.url)
+
+    amazon_reasons: list[str] = []
+    aba_reasons: list[str] = []
+
+    amazon_domain_keys = ("amazon.com", "amazon.", "sellercentral.amazon.")
+    if any(key in domain for key in amazon_domain_keys):
+        amazon_reasons.append(f"URL 域名命中 Amazon 特征：{domain}")
+    if "amazon" in title_l:
+        amazon_reasons.append(f"title 命中关键词：{page_info.title}")
+    if "amazon" in url_l:
+        amazon_reasons.append(f"url 命中关键词：{page_info.url}")
+
+    aba_keywords = (
+        "aba",
+        "brand analytics",
+        "brand-analytics",
+        "search query performance",
+        "search-query-performance",
+        "amazon brand analytics",
+    )
+    for kw in aba_keywords:
+        if kw in title_l:
+            aba_reasons.append(f"title 命中：{kw}")
+        if kw in url_l:
+            aba_reasons.append(f"url 命中：{kw}")
+
+    is_amazon_page = len(amazon_reasons) > 0
+    is_aba_page = is_amazon_page and len(aba_reasons) > 0
+
+    print("[PAGE_CHECK] 当前是否识别为 Amazon 页面：", "是" if is_amazon_page else "否")
+    print("[PAGE_CHECK] 当前是否识别为 ABA 页面：", "是" if is_aba_page else "否")
+    print("[PAGE_CHECK] Amazon 判断依据：")
+    if amazon_reasons:
+        for reason in amazon_reasons:
+            print(f"  - {reason}")
+    else:
+        print("  - 未命中 Amazon 相关 title/url 特征")
+    print("[PAGE_CHECK] ABA 判断依据：")
+    if aba_reasons:
+        for reason in aba_reasons:
+            print(f"  - {reason}")
+    else:
+        print("  - 未命中 ABA 相关 title/url 特征")
+
+    return PageRecognition(
+        is_amazon_page=is_amazon_page,
+        is_aba_page=is_aba_page,
+        amazon_reasons=amazon_reasons,
+        aba_reasons=aba_reasons,
+    )
+
+
+def _print_scope_boundary() -> None:
+    print("\n[RUNNER] 当前版本边界：")
+    print("[RUNNER] 未执行自动登录、账号密码处理、验证码处理。")
+    print("[RUNNER] 未执行真实 ABA 抓取、真实点击导出、真实解析、真实飞书写入。")
+
+
+def parse_export_file_placeholder() -> list[dict]:
+    """占位：保留结构，明确不执行真实导出解析。"""
     mock_rows = [
-        {"sku": "DEMO-SKU-001", "keyword": "demo keyword", "aba_rank": 1},
+        {"sku": "DEMO-SKU-001", "keyword": "demo keyword", "aba_rank": 1, "note": "placeholder"},
     ]
-    print(f"[PASS] PARSE_PLACEHOLDER - 解析占位完成，数据条数：{len(mock_rows)}")
     return mock_rows
 
 
 def main() -> None:
     """主流程入口。"""
-    print("\n[RUNNER] 启动任务：人工登录后抓 ABA（本地浏览器读取页面信息 v2）")
+    print("\n[RUNNER] 启动任务：人工登录后抓 ABA（本地浏览器读取页面信息 + 页面识别 v3）")
     print("[RUNNER] 低风险原则：不自动登录、不处理账号密码/验证码、不做真实抓取。")
 
     ctx = RuntimeContext()
@@ -235,9 +306,9 @@ def main() -> None:
     print(f"[RUNNER] 调试端点：{page_info.debugger_address}")
     print(f"[RUNNER] 当前页面标题：{page_info.title}")
     print(f"[RUNNER] 当前页面 URL：{page_info.url}")
-
-    export_file = export_aba_data()
-    parse_export_file(export_file)
+    recognize_page(page_info)
+    parse_export_file_placeholder()
+    _print_scope_boundary()
 
     print("\n[RUNNER] 任务完成：已具备读取浏览器当前页面信息的真实能力。")
     print("[RUNNER] 提示：本版本仍未执行真实导出、真实解析、真实飞书写入。")

@@ -1,50 +1,85 @@
 # openclaw-skills
 
-这是一个用于 **OpenClaw skills 开发** 的 Python 项目骨架（页面状态检查骨架 v1，含最小真实检查）。
+这是一个用于 **OpenClaw skills 开发** 的 Python 项目骨架。
 
-## 当前项目进展说明
+当前主线：**人工登录后抓 ABA 的低风险本地工具**。
 
-当前已提供一个“**更接近真实执行器的本地骨架版本**”，入口为 `skills/aba_fetch/main.py`。
+## 当前版本新增的真实能力（v2）
 
-这个版本的目标是：
-- 保持低风险前提下，把纯展示文案升级为可执行的步骤化流程。
-- 在结构上支持页面状态检查：
-  - `check_browser_open()`：检查浏览器是否已打开（最小真实实现：进程检查）
-  - `check_amazon_page()`：检查当前是否在 Amazon 页面（占位实现）
-  - `check_aba_page_ready()`：检查是否大致位于 ABA 页面（占位实现）
-- 保留后续关键环节占位：导出动作、导出文件解析、飞书写入。
+入口：`skills/aba_fetch/main.py`
 
-## 当前阶段能力说明
+本版本新增了一个最小可执行的真实动作：
+- 尝试连接本地浏览器调试端口（CDP）
+- 尝试读取当前页面信息（标题 / URL）
+- 将真实读取结果打印到终端
 
-当前版本可以：
-- 运行一个 6 步执行器风格流程（3 个状态检查 + 3 个业务占位步骤）。
-- 在每一步输出统一的状态码和 PASS/FAIL 结果。
-- 在检查不通过时提前终止，并给出终止原因。
-- 真实检查本机是否存在常见浏览器进程（Chrome / Edge）：
-  - Windows 下使用 `tasklist` 检查 `chrome.exe` / `msedge.exe`
-  - 非 Windows 环境下使用 `ps` 进行兼容性检查（便于本地开发与测试）
-- 在代码结构上为后续替换成真实逻辑预留清晰入口。
+> 仍坚持低风险约束：
+> - 不自动登录
+> - 不处理账号密码
+> - 不处理验证码
+> - 不做真实 ABA 抓取
+> - 不接飞书
 
-## 当前版本不能做什么
+## 功能边界
 
-当前版本**不能**：
-- 真实抓取 ABA 数据。
-- 自动控制浏览器（不做浏览器自动化）。
-- 自动登录 Amazon（不处理账号密码、验证码）。
-- 调用真实飞书接口写入数据。
-- 解析真实导出文件。
-- 做批量店铺并发处理。
+### 已实现
+- 真实检查本机是否存在 Chrome / Edge 进程。
+- 真实连接浏览器调试端点（`/json/list`）。
+- 从页面目标里读取并打印 `title` 与 `url`。
 
-换句话说：现在是“页面状态检查骨架版”，不是“生产可用版”。
+### 尚未实现
+- 自动点击 ABA 导出。
+- 读取真实导出文件并结构化解析。
+- 飞书写入。
 
-## 真实能力 vs 占位能力（当前版本）
+## 运行前准备（Windows）
 
-- 真实能力：
-  - 浏览器是否已打开：真实进程检查（Chrome / Edge）。
-- 占位能力：
-  - Amazon 页面判定（`check_amazon_page()`）。
-  - ABA 页面就绪判定（`check_aba_page_ready()`）。
-  - 导出、解析、飞书写入步骤。
+### 1) 手动启动浏览器并打开你要读取的页面
+
+请**手动登录**到目标网站（如 Amazon），并停留在你想读取的页面。
+
+### 2) 使用调试端口启动浏览器（关键）
+
+请关闭已打开的 Chrome / Edge 后，使用 PowerShell 启动一个带调试端口的实例。
+
+#### Chrome 示例
+
+```powershell
+& "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\tmp\chrome-cdp-profile"
+```
+
+#### Edge 示例
+
+```powershell
+& "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --remote-debugging-port=9222 --user-data-dir="C:\tmp\edge-cdp-profile"
+```
+
+> 说明：`--user-data-dir` 用于隔离调试实例的用户数据，减少与日常浏览器会话冲突。
+
+## 在 Windows PowerShell 下执行
+
+### 1) 安装依赖
+
+```powershell
+pip install -r requirements.txt
+```
+
+### 2) 运行演示脚本
+
+```powershell
+python -m skills.aba_fetch.main
+```
+
+### 3) 运行测试
+
+```powershell
+pytest -q
+```
+
+## 运行结果解读
+
+- 若看到 `PAGE_INFO_READ_OK`，说明已真实读取到页面信息。
+- 若看到 `PAGE_INFO_READ_FAILED`，通常是浏览器没有用调试端口启动，或端口被占用。
 
 ## 目录结构
 
@@ -53,7 +88,6 @@ openclaw-skills/
   README.md
   pyproject.toml
   requirements.txt
-  .env.example
   skills/
     __init__.py
     aba_fetch/
@@ -71,52 +105,3 @@ openclaw-skills/
   tests/
     test_demo.py
 ```
-
-## 快速开始
-
-1. （可选）创建并激活虚拟环境
-2. 安装依赖：
-
-```bash
-pip install -r requirements.txt
-```
-
-3. 运行演示：
-
-```bash
-python skills/aba_fetch/main.py
-```
-
-或使用模块方式运行：
-
-```bash
-python -m skills.aba_fetch.main
-```
-
-4. 运行测试：
-
-```bash
-pytest
-```
-
-## Windows / PowerShell 运行注意事项
-
-为了在 Windows PowerShell 下获得更稳定的输出与测试结果，脚本持续避免使用容易触发编码问题的特殊字符。默认可直接运行：
-
-```powershell
-python -m skills.aba_fetch.main
-pytest -q
-```
-
-如你的终端仍出现中文乱码或编码异常，可临时启用 UTF-8 模式后再运行：
-
-```powershell
-$env:PYTHONUTF8="1"
-python -m skills.aba_fetch.main
-pytest -q
-```
-
-## 说明
-
-- `skills/aba_fetch/main.py` 当前是“页面状态检查骨架 v1”。
-- 后续开发顺序可参考：`docs/next-step-plan.md`。

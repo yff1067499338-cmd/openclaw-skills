@@ -9,6 +9,8 @@ def test_placeholder_script_runs() -> None:
         text=True,
         check=True,
     )
-    assert "第一版可运行演示优化" in result.stdout
-    assert "第 5 步 / 共 5 步：模拟写入飞书" in result.stdout
-    assert "未进行真实抓取、真实解析、真实飞书写入" in result.stdout
+    assert "页面状态检查骨架 v1" in result.stdout
+    assert "步骤 1/6：检查浏览器是否已打开" in result.stdout
+    assert "[PASS] BROWSER_OPEN" in result.stdout
+    assert "[PASS] ABA_PAGE_READY" in result.stdout
+    assert "未执行真实导出、真实解析、真实飞书写入" in result.stdout

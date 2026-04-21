@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openclaw-skills"
+version = "0.1.0"
+description = "Stable starter skeleton for OpenClaw Python skills"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "requests",
+  "pandas",
+  "python-dotenv",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

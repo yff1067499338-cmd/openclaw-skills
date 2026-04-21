@@ -1,30 +1,30 @@
 # openclaw-skills
 
-这是一个用于 **OpenClaw skills 开发** 的私有自动化项目骨架，面向以下场景：
+这是一个用于 **OpenClaw skills 开发** 的 Python 项目骨架（稳定化第一版）。
 
-- 本地自动化脚本开发与调试
-- OpenClaw Skill 的模块化组织与扩展
-- 飞书（Feishu/Lark）相关接口与数据表集成
+## 当前阶段目标
 
-## 项目目标
+- 提供干净、可持续迭代的目录结构
+- 保持最小可运行入口，便于快速验证环境
+- 不引入真实业务抓取逻辑或浏览器自动化
 
-- 保持目录清晰、可维护，便于后续持续扩展
-- 使用轻量依赖快速启动 PoC 与内部自动化任务
-- 为后续接入真实业务逻辑预留文档、配置与测试结构
-
-## 当前目录结构
+## 目录结构
 
 ```text
 openclaw-skills/
   README.md
+  pyproject.toml
   requirements.txt
   .env.example
   skills/
+    __init__.py
     aba_fetch/
+      __init__.py
       README.md
       config.example.json
       main.py
     common/
+      __init__.py
       utils.py
   docs/
     skill-spec.md
@@ -35,21 +35,35 @@ openclaw-skills/
 
 ## 快速开始
 
-1. 创建并激活虚拟环境（可选）
+1. （可选）创建并激活虚拟环境
 2. 安装依赖：
 
 ```bash
 pip install -r requirements.txt
 ```
 
-3. 复制环境变量模板并填写：
-
-```bash
-cp .env.example .env
-```
-
-4. 运行占位 Skill：
+3. 运行最小入口：
 
 ```bash
 python skills/aba_fetch/main.py
 ```
+
+或使用模块方式运行：
+
+```bash
+python -m skills.aba_fetch.main
+```
+
+4. 运行测试：
+
+```bash
+pytest
+```
+
+## 说明
+
+- `skills/aba_fetch/main.py` 当前只保留最小可运行占位逻辑。
+- 当前版本不包含：
+  - 真实 ABA 抓取实现
+  - 浏览器自动化
+  - 飞书写入逻辑

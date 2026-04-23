@@ -24,6 +24,8 @@ from datetime import datetime
 import requests
 from bs4 import BeautifulSoup, NavigableString, Tag
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -101,11 +103,11 @@ def get_vault_path(config: dict) -> str:
 def create_driver(headless=False):
     options = ChromeOptions()
     options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    # 修改点：合并 excludeSwitches，避免覆盖
+    options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
     options.add_experimental_option("useAutomationExtension", False)
-    # 抑制 Chrome 内部日志
     options.add_argument("--log-level=3")
-    options.add_experimental_option("excludeSwitches", ["enable-logging"])
+
     if headless:
         options.add_argument("--headless=new")
         options.add_argument("--disable-gpu")
@@ -115,10 +117,12 @@ def create_driver(headless=False):
         options.add_argument("--start-maximized")
 
     try:
-        driver = webdriver.Chrome(options=options)
+        # 修改点：使用 Service 和 Webdriver Manager 自动管理驱动
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=options)
     except Exception as e:
         logger.error(f"启动 Chrome 失败: {e}")
-        print("请确保已安装 Chrome 浏览器和 selenium (pip install selenium)")
+        print("请确保已安装 Chrome 浏览器")
         sys.exit(1)
 
     driver.execute_cdp_cmd(
